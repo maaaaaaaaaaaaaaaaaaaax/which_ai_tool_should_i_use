@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tool Finder - Find the Right AI for Your Task</title>
+    <style>
+        /* CSS SECTION - This controls how everything looks */
+        
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        /* Question section */
+        .question-section {
+            margin-bottom: 30px;
+        }
+        
+        .question-section h2 {
+            color: #444;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+        }
+        
+        /* Task category buttons */
+        .task-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .task-button {
+            padding: 20px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .task-button:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .task-button.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .task-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        .task-name {
+            font-weight: 600;
+            font-size: 1.1em;
+        }
+        
+        /* Results section */
+        .results-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .results-section.show {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .tool-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .tool-card h3 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 1.4em;
+        }
+        
+        .tool-description {
+            color: #555;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .tool-features {
+            margin-bottom: 15px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .feature-list li {
+            padding: 6px 0;
+            color: #666;
+        }
+        
+        .feature-list li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .tool-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+        }
+        
+        .tool-link:hover {
+            background: #5568d3;
+        }
+        
+        .pricing {
+            display: inline-block;
+            margin-left: 15px;
+            padding: 6px 12px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: 600;
+        }
+        
+        .pricing.paid {
+            background: #fff3e0;
+            color: #e65100;
+        }
+        
+        .reset-button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background 0.3s ease;
+        }
+        
+        .reset-button:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 AI Tool Finder</h1>
+        <p class="subtitle">Find the perfect AI tool for your task</p>
+        
+        <!-- QUESTION SECTION -->
+        <div class="question-section" id="questionSection">
+            <h2>What kind of task do you need help with?</h2>
+            <div class="task-grid" id="taskGrid">
+                <!-- These buttons will be populated by JavaScript -->
+            </div>
+        </div>
+        
+        <!-- RESULTS SECTION -->
+        <div class="results-section" id="resultsSection">
+            <h2>Recommended AI Tools</h2>
+            <div id="toolResults"></div>
+            <button class="reset-button" onclick="resetTool()">← Choose Different Task</button>
+        </div>
+    </div>
+
+    <script>
+        // JAVASCRIPT SECTION - This makes the page interactive
+        
+        // STEP 1: Define our data structure
+        // This is our "database" of tasks and tools
+        
+        const tasks = [
+            {
+                id: 'writing',
+                name: 'Writing & Editing',
+                icon: '✍️',
+                tools: ['chatgpt', 'claude', 'jasper', 'grammarly']
+            },
+            {
+                id: 'coding',
+                name: 'Coding & Programming',
+                icon: '💻',
+                tools: ['github-copilot', 'claude', 'chatgpt', 'cursor']
+            },
+            {
+                id: 'images',
+                name: 'Image Generation',
+                icon: '🎨',
+                tools: ['midjourney', 'dall-e', 'stable-diffusion', 'leonardo']
+            },
+            {
+                id: 'video',
+                name: 'Video Creation',
+                icon: '🎬',
+                tools: ['runway', 'pika', 'synthesia']
+            },
+            {
+                id: 'research',
+                name: 'Research & Analysis',
+                icon: '🔍',
+                tools: ['perplexity', 'claude', 'chatgpt', 'consensus']
+            },
+            {
+                id: 'audio',
+                name: 'Audio & Music',
+                icon: '🎵',
+                tools: ['elevenlabs', 'suno', 'mubert']
+            },
+            {
+                id: 'productivity',
+                name: 'Productivity & Automation',
+                icon: '⚡',
+                tools: ['notion-ai', 'chatgpt', 'zapier']
+            },
+            {
+                id: 'design',
+                name: 'Design & UI/UX',
+                icon: '🎯',
+                tools: ['canva', 'uizard', 'galileo-ai']
+            }
+        ];
+        
+        // This is our "database" of AI tools with all their information
+        const aiTools = {
+            'chatgpt': {
+                name: 'ChatGPT',
+                description: 'OpenAI\'s conversational AI that can help with writing, coding, analysis, and general questions.',
+                features: ['Natural conversation', 'Code generation', 'Web browsing capability', 'Image analysis'],
+                pricing: 'Free tier available, Plus $20/month',
+                link: 'https://chat.openai.com',
+                freeTier: true
+            },
+            'claude': {
+                name: 'Claude',
+                description: 'Anthropic\'s AI assistant with strong capabilities in analysis, coding, and working with long documents.',
+                features: ['Excellent for coding', 'Large context window', 'Strong analytical skills', 'File analysis'],
+                pricing: 'Free tier available, Pro $20/month',
+                link: 'https://claude.ai',
+                freeTier: true
+            },
+            'github-copilot': {
+                name: 'GitHub Copilot',
+                description: 'AI pair programmer that helps you write code faster with autocomplete suggestions.',
+                features: ['IDE integration', 'Real-time code suggestions', 'Supports many languages', 'Learns from your code'],
+                pricing: '$10/month (free for students)',
+                link: 'https://github.com/features/copilot',
+                freeTier: false
+            },
+            'midjourney': {
+                name: 'Midjourney',
+                description: 'Advanced AI image generator known for artistic and high-quality images.',
+                features: ['Photorealistic images', 'Artistic styles', 'High resolution', 'Community gallery'],
+                pricing: 'Starts at $10/month',
+                link: 'https://www.midjourney.com',
+                freeTier: false
+            },
+            'dall-e': {
+                name: 'DALL-E',
+                description: 'OpenAI\'s image generator integrated with ChatGPT, great for quick visual creation.',
+                features: ['Easy to use', 'Integrated with ChatGPT', 'Image editing', 'Consistent style'],
+                pricing: 'Included with ChatGPT Plus',
+                link: 'https://openai.com/dall-e',
+                freeTier: false
+            },
+            'stable-diffusion': {
+                name: 'Stable Diffusion',
+                description: 'Open-source image generator you can run locally or use through various platforms.',
+                features: ['Open source', 'Run locally', 'Highly customizable', 'Active community'],
+                pricing: 'Free (open source)',
+                link: 'https://stability.ai',
+                freeTier: true
+            },
+            'perplexity': {
+                name: 'Perplexity AI',
+                description: 'AI-powered search engine that provides answers with cited sources.',
+                features: ['Real-time web search', 'Cited sources', 'Follow-up questions', 'Academic mode'],
+                pricing: 'Free tier available, Pro $20/month',
+                link: 'https://www.perplexity.ai',
+                freeTier: true
+            },
+            'jasper': {
+                name: 'Jasper',
+                description: 'AI writing assistant focused on marketing and business content.',
+                features: ['Marketing templates', 'Brand voice', 'SEO optimization', 'Team collaboration'],
+                pricing: 'Starts at $49/month',
+                link: 'https://www.jasper.ai',
+                freeTier: false
+            },
+            'grammarly': {
+                name: 'Grammarly',
+                description: 'AI-powered writing assistant for grammar, spelling, and style improvements.',
+                features: ['Grammar checking', 'Style suggestions', 'Plagiarism detection', 'Browser extension'],
+                pricing: 'Free tier available, Premium $12/month',
+                link: 'https://www.grammarly.com',
+                freeTier: true
+            },
+            'runway': {
+                name: 'Runway',
+                description: 'AI-powered video editing and generation platform.',
+                features: ['Text to video', 'Video editing tools', 'Image to video', 'AI effects'],
+                pricing: 'Free tier available, starts at $12/month',
+                link: 'https://runwayml.com',
+                freeTier: true
+            },
+            'pika': {
+                name: 'Pika',
+                description: 'AI video generator that creates videos from text prompts.',
+                features: ['Text to video', 'Easy to use', 'Quick generation', 'Web-based'],
+                pricing: 'Free tier available',
+                link: 'https://pika.art',
+                freeTier: true
+            },
+            'synthesia': {
+                name: 'Synthesia',
+                description: 'AI video platform for creating videos with AI avatars.',
+                features: ['AI avatars', 'Multiple languages', 'Professional templates', 'No filming needed'],
+                pricing: 'Starts at $22/month',
+                link: 'https://www.synthesia.io',
+                freeTier: false
+            },
+            'elevenlabs': {
+                name: 'ElevenLabs',
+                description: 'Advanced AI voice generator with realistic text-to-speech.',
+                features: ['Natural voices', 'Voice cloning', 'Multiple languages', 'API access'],
+                pricing: 'Free tier available, starts at $5/month',
+                link: 'https://elevenlabs.io',
+                freeTier: true
+            },
+            'suno': {
+                name: 'Suno',
+                description: 'AI music generator that creates original songs from text prompts.',
+                features: ['Full song generation', 'Multiple genres', 'Lyrics and vocals', 'Commercial use'],
+                pricing: 'Free tier available, Pro $10/month',
+                link: 'https://www.suno.ai',
+                freeTier: true
+            },
+            'mubert': {
+                name: 'Mubert',
+                description: 'AI music generator for background music and soundtracks.',
+                features: ['Royalty-free music', 'Multiple moods', 'Custom length', 'API available'],
+                pricing: 'Free tier available, starts at $14/month',
+                link: 'https://mubert.com',
+                freeTier: true
+            },
+            'notion-ai': {
+                name: 'Notion AI',
+                description: 'AI assistant built into Notion for writing, brainstorming, and organizing.',
+                features: ['Integrated with Notion', 'Writing assistance', 'Summarization', 'Database queries'],
+                pricing: '$10/month (add-on to Notion)',
+                link: 'https://www.notion.so/product/ai',
+                freeTier: false
+            },
+            'zapier': {
+                name: 'Zapier AI',
+                description: 'Automation platform with AI to connect apps and automate workflows.',
+                features: ['App integration', 'Workflow automation', 'AI-powered suggestions', '6000+ apps'],
+                pricing: 'Free tier available, starts at $19.99/month',
+                link: 'https://zapier.com',
+                freeTier: true
+            },
+            'canva': {
+                name: 'Canva',
+                description: 'Design platform with AI features for creating graphics and presentations.',
+                features: ['Templates', 'AI image generation', 'Brand kit', 'Team collaboration'],
+                pricing: 'Free tier available, Pro $12.99/month',
+                link: 'https://www.canva.com',
+                freeTier: true
+            },
+            'cursor': {
+                name: 'Cursor',
+                description: 'AI-powered code editor built for pair programming with AI.',
+                features: ['AI code generation', 'Chat with codebase', 'Auto-debug', 'VSCode compatible'],
+                pricing: 'Free tier available, Pro $20/month',
+                link: 'https://cursor.sh',
+                freeTier: true
+            },
+            'leonardo': {
+                name: 'Leonardo AI',
+                description: 'AI image generator focused on game assets and creative content.',
+                features: ['Game assets', 'Consistent characters', 'Multiple models', 'Canvas editor'],
+                pricing: 'Free tier available, starts at $12/month',
+                link: 'https://leonardo.ai',
+                freeTier: true
+            },
+            'consensus': {
+                name: 'Consensus',
+                description: 'AI search engine that finds answers in research papers.',
+                features: ['Academic papers', 'Cited sources', 'Research summaries', 'Scientific accuracy'],
+                pricing: 'Free tier available, Premium $8.99/month',
+                link: 'https://consensus.app',
+                freeTier: true
+            },
+            'uizard': {
+                name: 'Uizard',
+                description: 'AI-powered design tool for creating app and web interfaces.',
+                features: ['Text to UI', 'Wireframes', 'Mockups', 'Collaboration'],
+                pricing: 'Free tier available, starts at $12/month',
+                link: 'https://uizard.io',
+                freeTier: true
+            },
+            'galileo-ai': {
+                name: 'Galileo AI',
+                description: 'AI design tool for generating UI designs from text descriptions.',
+                features: ['Text to design', 'High-fidelity mockups', 'Design systems', 'Export code'],
+                pricing: 'Waitlist/Early access',
+                link: 'https://www.usegalileo.ai',
+                freeTier: false
+            }
+        };
+        
+        // STEP 2: Functions that make things happen
+        
+        // This function runs when the page first loads
+        function initializeApp() {
+            const taskGrid = document.getElementById('taskGrid');
+            
+            // Loop through each task and create a button for it
+            tasks.forEach(task => {
+                const button = document.createElement('div');
+                button.className = 'task-button';
+                button.onclick = () => showTools(task.id);
+                button.innerHTML = `
+                    <div class="task-icon">${task.icon}</div>
+                    <div class="task-name">${task.name}</div>
+                `;
+                taskGrid.appendChild(button);
+            });
+        }
+        
+        // This function shows tools when user clicks a task
+        function showTools(taskId) {
+            // Find the task that was clicked
+            const selectedTask = tasks.find(task => task.id === taskId);
+            
+            // Get the container where we'll display results
+            const resultsSection = document.getElementById('resultsSection');
+            const toolResults = document.getElementById('toolResults');
+            const questionSection = document.getElementById('questionSection');
+            
+            // Clear previous results
+            toolResults.innerHTML = '';
+            
+            // Create a card for each recommended tool
+            selectedTask.tools.forEach(toolId => {
+                const tool = aiTools[toolId];
+                
+                const toolCard = document.createElement('div');
+                toolCard.className = 'tool-card';
+                toolCard.innerHTML = `
+                    <h3>${tool.name}</h3>
+                    <p class="tool-description">${tool.description}</p>
+                    <div class="tool-features">
+                        <strong>Key Features:</strong>
+                        <ul class="feature-list">
+                            ${tool.features.map(feature => `<li>${feature}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div>
+                        <a href="${tool.link}" target="_blank" class="tool-link">Visit ${tool.name}</a>
+                        <span class="pricing ${tool.freeTier ? '' : 'paid'}">${tool.pricing}</span>
+                    </div>
+                `;
+                toolResults.appendChild(toolCard);
+            });
+            
+            // Hide question section and show results
+            questionSection.style.display = 'none';
+            resultsSection.classList.add('show');
+        }
+        
+        // This function resets everything back to the start
+        function resetTool() {
+            document.getElementById('questionSection').style.display = 'block';
+            document.getElementById('resultsSection').classList.remove('show');
+        }
+        
+        // STEP 3: Start the app when page loads
+        // This waits for the page to fully load, then runs our initialization
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+</html>
